@@ -64,12 +64,14 @@ action :create do
       end
       new_resource.updated_by_last_action(res.updated_by_last_action?)
 
-      res = libarchive_file "kibana_#{kb_args[:file_version]}_#{kb_args[:name]}.tar.gz" do
-        path "#{Chef::Config[:file_cache_path]}/kibana_#{kb_args[:file_version]}_#{kb_args[:name]}.tar.gz"
-        extract_to kb_args[:install_dir]
-        owner kb_args[:user]
-        action [:extract]
+      res = execute "kibana_#{kb_args[:file_version]}_#{kb_args[:name]}.tar.gz" do
+        command %Q{
+          tar xzvf #{Chef::Config[:file_cache_path]}/kibana_#{kb_args[:file_version]}_#{kb_args[:name]}.tar.gz -C #{kb_args[:install_dir]}
+          chown #{kb_args[:user]} -R #{kb_args[:install_dir]}
+        }
+        not_if { File.exists?("#{kb_args[:install_dir]}/kibana_#{kb_args[:file_version]}") }
       end
+
       new_resource.updated_by_last_action(res.updated_by_last_action?)
 
       res = link "#{kb_args[:install_dir]}/current" do
